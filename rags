@@ -1,0 +1,897 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Lab — Interactive Simulator</title>
+<style>
+:root {
+  --blue: #0a66c2;
+  --blue-dark: #004182;
+  --ink: #1d2226;
+  --muted: #666;
+  --line: #d6d9dc;
+  --bg: #f3f2ef;
+  --white: #fff;
+  --green: #16804a;
+  --soft-blue: #e8f3ff;
+  --soft-green: #e7f5ec;
+  --shadow: 0 2px 5px #00000012;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 Arial, Helvetica, sans-serif;
+}
+header {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.nav {
+  max-width: 1160px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 700;
+  font-size: 19px;
+  color: var(--blue-dark);
+}
+.logo {
+  width: 31px;
+  height: 31px;
+  background: var(--blue);
+  border-radius: 5px;
+  color: white;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+.nav-note {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 13px;
+}
+main {
+  max-width: 1160px;
+  margin: 22px auto;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, .9fr);
+  gap: 18px;
+  align-items: start;
+}
+.card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.card-head {
+  padding: 16px 18px;
+  border-bottom: 1px solid #e5e7e9;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.card-head h2, .card-head h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.card-head p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.card-body { padding: 18px; }
+.hero {
+  background: linear-gradient(115deg, #e8f3ff, #fff);
+  padding: 23px 22px;
+}
+.eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+h1 {
+  font-size: 27px;
+  line-height: 1.2;
+  margin: 6px 0 9px;
+}
+.hero p {
+  margin: 0;
+  color: #38434c;
+  max-width: 720px;
+}
+.pill {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 99px;
+  background: #eef0f2;
+  color: #42484d;
+  font-size: 12px;
+  font-weight: 700;
+}
+.pill.blue { background: var(--soft-blue); color: var(--blue-dark); }
+.pill.green { background: var(--soft-green); color: #126b3e; }
+.steps {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 7px;
+  padding: 14px 18px;
+}
+.step {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  background: #fafafa;
+}
+.step .num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: 0 auto 6px;
+  border-radius: 50%;
+  background: #e5e7e9;
+  color: #555;
+  font-weight: bold;
+}
+.step.active {
+  border-color: var(--blue);
+  background: var(--soft-blue);
+  color: var(--blue-dark);
+  font-weight: bold;
+}
+.step.active .num { background: var(--blue); color: #fff; }
+.step.done {
+  border-color: #9ac9ad;
+  background: #f0faf4;
+  color: #126b3e;
+}
+.step.done .num { background: var(--green); color: white; }
+.section-title { font-size: 16px; margin: 0 0 6px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+button {
+  border: 0;
+  border-radius: 6px;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 14px;
+}
+button:hover { background: var(--blue-dark); }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button.secondary {
+  background: #eef3f8;
+  color: var(--blue-dark);
+  border: 1px solid #c7d8e8;
+}
+button.secondary:hover { background: #dcebf8; }
+button.ghost {
+  background: white;
+  color: var(--blue);
+  border: 1px solid var(--blue);
+}
+textarea, input, select {
+  width: 100%;
+  border: 1px solid #8c8f91;
+  border-radius: 6px;
+  padding: 11px 12px;
+  font: inherit;
+  background: #fff;
+  color: var(--ink);
+}
+textarea { min-height: 86px; resize: vertical; }
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 13px 0 6px;
+}
+.doc-list, .chunk-list { display: grid; gap: 9px; }
+.doc, .chunk {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.doc h4, .chunk h4 { margin: 0 0 4px; font-size: 14px; }
+.doc p, .chunk p {
+  margin: 0;
+  font-size: 13px;
+  color: #4c5358;
+}
+.doc .meta, .chunk .meta {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.mini {
+  font-size: 11px;
+  border-radius: 4px;
+  background: #f1f3f5;
+  padding: 3px 6px;
+  color: #51565a;
+}
+.doc.selected, .chunk.relevant {
+  border-color: var(--green);
+  background: #f2fbf5;
+}
+.chunk.irrelevant { opacity: .65; }
+.notice {
+  border-left: 4px solid var(--blue);
+  background: #f1f7fd;
+  padding: 11px 13px;
+  border-radius: 4px;
+  font-size: 13px;
+  margin: 12px 0;
+}
+.notice.green {
+  border-left-color: var(--green);
+  background: #f0faf4;
+}
+.progress {
+  height: 7px;
+  background: #e7e9eb;
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--blue);
+  width: 0;
+  transition: width .25s;
+}
+.output {
+  background: #f8fafc;
+  border: 1px solid #dbe2e8;
+  border-radius: 8px;
+  padding: 14px;
+  white-space: pre-wrap;
+}
+.citation {
+  display: inline-block;
+  border: 1px solid #b6d6f4;
+  background: #e8f3ff;
+  color: #004182;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin: 2px;
+}
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
+.metric {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px;
+}
+.metric strong {
+  display: block;
+  font-size: 22px;
+  color: var(--blue-dark);
+}
+.metric span { font-size: 12px; color: var(--muted); }
+aside .card-body { padding: 15px; }
+.aside-list { padding-left: 18px; margin: 7px 0; }
+.aside-list li { margin: 6px 0; font-size: 13px; }
+.glossary { display: grid; gap: 10px; }
+.glossary strong { display: block; font-size: 13px; }
+.glossary span { font-size: 12px; color: var(--muted); }
+footer {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 16px 28px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.hidden { display: none !important; }
+@media (max-width: 820px) {
+  main { grid-template-columns: 1fr; }
+  .nav-note { display: none; }
+  .steps { grid-template-columns: repeat(3, 1fr); }
+  h1 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="brand">
+      <div class="logo">in</div>
+      <span>RAG Lab</span>
+    </div>
+    <span class="pill blue">LEARN BY DOING</span>
+    <div class="nav-note">Retrieval-Augmented Generation · Interactive demo</div>
+  </div>
+</header>
+
+<main>
+<div>
+  <section class="card hero">
+    <div class="eyebrow">AI concepts, made practical</div>
+    <h1>See how RAG finds the right information</h1>
+    <p>Follow a question from source documents to retrieved chunks, then watch a simulated language model produce an answer with references. No API key or internet connection required.</p>
+    <div class="row" style="margin-top:14px">
+      <span class="pill blue">6 stages</span>
+      <span class="pill">Local simulation</span>
+      <span class="pill green">Try your own question</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="steps" id="stepper">
+      <div class="step active"><div class="num">1</div>Documents</div>
+      <div class="step"><div class="num">2</div>Chunking</div>
+      <div class="step"><div class="num">3</div>Embeddings</div>
+      <div class="step"><div class="num">4</div>Retrieval</div>
+      <div class="step"><div class="num">5</div>LLM answer</div>
+      <div class="step"><div class="num">6</div>Evaluation</div>
+    </div>
+
+    <div class="progress"><span id="progressBar"></span></div>
+    <div class="card-body" id="stageContent"></div>
+
+    <div class="card-body" style="border-top:1px solid #e5e7e9">
+      <div class="row" style="justify-content:space-between">
+        <button class="secondary" id="backBtn" disabled>← Previous</button>
+        <div class="row">
+          <button class="ghost" id="resetBtn">Reset demo</button>
+          <button id="nextBtn">Next stage →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<aside>
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h3>Live system snapshot</h3>
+        <p>Updates as you move through the workflow</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="metric-grid">
+        <div class="metric">
+          <strong id="docMetric">3</strong>
+          <span>Source documents</span>
+        </div>
+        <div class="metric">
+          <strong id="chunkMetric">—</strong>
+          <span>Indexed chunks</span>
+        </div>
+        <div class="metric">
+          <strong id="retrievalMetric">—</strong>
+          <span>Retrieved chunks</span>
+        </div>
+        <div class="metric">
+          <strong id="tokenMetric">—</strong>
+          <span>Context size (rough)</span>
+        </div>
+      </div>
+      <div class="notice" id="snapshotNote">
+        Start with source documents. RAG usually prepares and indexes them before a user asks a question.
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h3>Key terms</h3>
+        <p>A quick glossary</p>
+      </div>
+    </div>
+    <div class="card-body glossary">
+      <div>
+        <strong>Chunk</strong>
+        <span>A smaller passage split from a larger document.</span>
+      </div>
+      <div>
+        <strong>Embedding</strong>
+        <span>A numerical representation that helps compare meaning.</span>
+      </div>
+      <div>
+        <strong>Retriever</strong>
+        <span>The component that searches for useful passages.</span>
+      </div>
+      <div>
+        <strong>Context window</strong>
+        <span>The input the LLM can consider for a response.</span>
+      </div>
+      <div>
+        <strong>Grounding</strong>
+        <span>Using retrieved evidence to support the answer.</span>
+      </div>
+      <div>
+        <strong>Index refresh</strong>
+        <span>Updating indexed content after source data changes.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div><h3>Remember</h3></div></div>
+    <div class="card-body">
+      <ul class="aside-list">
+        <li>RAG is a workflow, not a model by itself.</li>
+        <li>Retrieval reduces irrelevant context; it does not guarantee truth.</li>
+        <li>Embeddings help search, but do not themselves contain a readable copy of the document.</li>
+        <li>Updating a source does not always refresh its index automatically.</li>
+        <li>Permissions must be checked before restricted chunks are retrieved.</li>
+      </ul>
+    </div>
+  </section>
+</aside>
+</main>
+
+<footer>
+  Educational demo only. Retrieval uses simple keyword overlap and the answer is template-generated; it does not call a real embedding model or LLM.
+</footer>
+
+<script>
+const docs = [
+  {
+    id: "D1",
+    title: "Refund & Returns Policy",
+    text: "Customers can request a refund within 30 days of delivery. Items must be unused and returned with proof of purchase. Refunds are processed within 5 to 7 business days after the returned item is inspected.",
+    access: "Public",
+    updated: "2026-10-10"
+  },
+  {
+    id: "D2",
+    title: "Shipping Guide",
+    text: "Standard shipping usually takes 3 to 5 business days. Express shipping usually takes 1 to 2 business days. Tracking details are sent by email when the order ships.",
+    access: "Public",
+    updated: "2026-10-08"
+  },
+  {
+    id: "D3",
+    title: "Customer Support Handbook",
+    text: "Customers can contact support Monday to Friday, 9 AM to 5 PM. For a delayed order, provide the order number and tracking link. Agents should never ask customers to share their password.",
+    access: "Internal",
+    updated: "2026-10-12"
+  }
+];
+
+const defaultQuestion =
+  "How long do I have to request a refund, and when will I get my money back?";
+
+let question = defaultQuestion;
+let stage = 0;
+let chunks = [];
+let retrieved = [];
+let answerText = "";
+let permissionFilter = false;
+
+const $ = id => document.getElementById(id);
+
+function splitChunks() {
+  chunks = [];
+
+  docs.forEach(d => {
+    const sentences = d.text.match(/[^.!?]+[.!?]*/g) || [d.text];
+    let group = "";
+
+    sentences.forEach(s => {
+      if ((group + " " + s).trim().length > 145 && group) {
+        chunks.push({
+          id: d.id + "-C" +
+            (chunks.filter(c => c.docId === d.id).length + 1),
+          docId: d.id,
+          title: d.title,
+          text: group.trim(),
+          access: d.access,
+          updated: d.updated
+        });
+        group = s.trim();
+      } else {
+        group = (group + " " + s).trim();
+      }
+    });
+
+    if (group) {
+      chunks.push({
+        id: d.id + "-C" +
+          (chunks.filter(c => c.docId === d.id).length + 1),
+        docId: d.id,
+        title: d.title,
+        text: group.trim(),
+        access: d.access,
+        updated: d.updated
+      });
+    }
+  });
+}
+
+function words(s) {
+  return (s.toLowerCase().match(/[a-z0-9]+/g) || [])
+    .filter(w => ![
+      "what", "when", "where", "how", "the", "and", "for",
+      "are", "you", "can", "have", "does", "get", "will",
+      "with", "from", "that", "this", "into", "much", "long",
+      "i", "a", "to", "of", "is", "do", "my"
+    ].includes(w));
+}
+
+function scoreChunk(c, q) {
+  const qw = words(q);
+  const text = (c.title + " " + c.text).toLowerCase();
+  let score = 0;
+
+  qw.forEach(w => {
+    if (text.includes(w)) score += 1;
+  });
+
+  const synonyms = {
+    "money": ["refund", "refunds", "payment"],
+    "back": ["refund", "processed"],
+    "time": ["days", "within"],
+    "return": ["returned", "refund"],
+    "shipping": ["delivery", "ships", "tracking"]
+  };
+
+  qw.forEach(w => {
+    (synonyms[w] || []).forEach(s => {
+      if (text.includes(s)) score += 0.5;
+    });
+  });
+
+  return score;
+}
+
+function doRetrieve() {
+  const q = $("questionInput")?.value?.trim() || question;
+  question = q;
+  permissionFilter = $("permissionToggle")?.checked || false;
+
+  retrieved = chunks
+    .map(c => ({ ...c, score: scoreChunk(c, q) }))
+    .filter(c =>
+      c.score > 0 &&
+      (!permissionFilter || c.access === "Public")
+    )
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  answerText = makeAnswer(q, retrieved);
+}
+
+function makeAnswer(q, rs) {
+  if (!rs.length) {
+    return "I couldn't find enough relevant information in the indexed documents to answer confidently. A real RAG system should say it doesn't know, broaden the search, or ask a clarifying question.";
+  }
+
+  const all = rs.map(r => r.text).join(" ").toLowerCase();
+  const parts = [];
+
+  if (all.includes("30 days"))
+    parts.push("You can request a refund within 30 days of delivery.");
+
+  if (all.includes("5 to 7 business days"))
+    parts.push("After the returned item is inspected, the refund is processed within 5–7 business days.");
+
+  if (all.includes("3 to 5 business days"))
+    parts.push("Standard shipping usually takes 3–5 business days.");
+
+  if (all.includes("1 to 2 business days"))
+    parts.push("Express shipping usually takes 1–2 business days.");
+
+  if (all.includes("monday to friday"))
+    parts.push("Customer support is available Monday to Friday, 9 AM–5 PM.");
+
+  if (all.includes("tracking details"))
+    parts.push("Tracking details are sent by email when the order ships.");
+
+  if (all.includes("password"))
+    parts.push("Support agents should never ask for your password.");
+
+  if (!parts.length) parts.push(rs[0].text);
+
+  return parts.join(" ") +
+    "\n\nThis answer is based on the retrieved passages shown below. Please verify important policy details against the original source.";
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
+}
+
+function stageHTML() {
+  if (stage === 0) {
+    return `
+      <h2 class="section-title">Stage 1 — Source documents</h2>
+      <p class="muted">RAG needs a knowledge source. Imagine these are documents stored by a company before anyone asks the chatbot a question.</p>
+      <div class="doc-list">
+        ${docs.map(d => `
+          <div class="doc">
+            <h4>${esc(d.title)}</h4>
+            <p>${esc(d.text)}</p>
+            <div class="meta">
+              <span class="mini">${d.id}</span>
+              <span class="mini">Access: ${d.access}</span>
+              <span class="mini">Updated: ${d.updated}</span>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="notice">
+        <b>Product lesson:</b> content quality and access permissions start at the source. A RAG system should not retrieve a restricted document for an unauthorized user.
+      </div>`;
+  }
+
+  if (stage === 1) {
+    return `
+      <h2 class="section-title">Stage 2 — Chunking</h2>
+      <p class="muted">Large documents are split into smaller passages. Small chunks can make retrieval more precise, but chunks that are too small may lose useful context.</p>
+      <div class="chunk-list">
+        ${chunks.map(c => `
+          <div class="chunk">
+            <div class="row" style="justify-content:space-between">
+              <h4>${esc(c.title)}</h4>
+              <span class="mini">${c.id}</span>
+            </div>
+            <p>${esc(c.text)}</p>
+            <div class="meta">
+              <span class="mini">${c.text.length} characters</span>
+              <span class="mini">Source ${c.docId}</span>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="notice">
+        <b>Trade-off:</b> chunk size, overlap, and boundaries affect retrieval quality. Real systems may preserve headings and metadata as well.
+      </div>`;
+  }
+
+  if (stage === 2) {
+    return `
+      <h2 class="section-title">Stage 3 — Embeddings & index</h2>
+      <p class="muted">Each chunk can be converted into a vector embedding: a list of numbers representing aspects of its meaning. The vectors and metadata are indexed for searching.</p>
+      <label>Question to search for</label>
+      <textarea id="questionInput">${esc(question)}</textarea>
+      <div class="chunk-list" style="margin-top:12px">
+        ${chunks.map((c, i) => `
+          <div class="chunk">
+            <div class="row" style="justify-content:space-between">
+              <h4>${esc(c.id)} · ${esc(c.title)}</h4>
+              <span class="pill blue">Vector indexed</span>
+            </div>
+            <p>${esc(c.text)}</p>
+            <div class="meta">
+              <span class="mini">Vector example: [${(0.12 + i * 0.03).toFixed(2)}, ${(0.81 - i * 0.07).toFixed(2)}, ${(0.34 + i * 0.04).toFixed(2)}, …]</span>
+              <span class="mini">Illustrative only</span>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="notice">
+        These numbers are placeholders, not real embeddings. Actual embeddings have many dimensions and are produced by an embedding model.
+      </div>`;
+  }
+
+  if (stage === 3) {
+    return `
+      <h2 class="section-title">Stage 4 — Retrieve relevant chunks</h2>
+      <p class="muted">The retriever compares the question with indexed chunks, ranks candidates, and selects a small set to send to the LLM.</p>
+      <label>Your question</label>
+      <textarea id="questionInput">${esc(question)}</textarea>
+      <label class="row" style="font-weight:400;gap:8px">
+        <input id="permissionToggle" type="checkbox" style="width:auto" ${permissionFilter ? "checked" : ""}>
+        Simulate a public-user permission filter (exclude internal documents)
+      </label>
+      <div class="row" style="margin:12px 0">
+        <button id="retrieveBtn">Retrieve top chunks</button>
+        <span class="small muted">This demo uses keyword overlap, not semantic vector search.</span>
+      </div>
+      ${retrieved.length ? `
+        <div class="notice green">Retrieved ${retrieved.length} chunk(s). Only these passages would be passed forward as context in this simplified example.</div>
+        <div class="chunk-list">
+          ${retrieved.map(c => `
+            <div class="chunk relevant">
+              <div class="row" style="justify-content:space-between">
+                <h4>${esc(c.id)} · ${esc(c.title)}</h4>
+                <span class="pill green">Score ${c.score.toFixed(1)}</span>
+              </div>
+              <p>${esc(c.text)}</p>
+              <div class="meta">
+                <span class="mini">Source ${c.docId}</span>
+                <span class="mini">Access: ${c.access}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      ` : `
+        <div class="notice">Click “Retrieve top chunks” to run the search. Try asking about refunds, shipping, tracking, or support hours.</div>
+      `}
+      <div class="notice">
+        <b>Important:</b> the system should apply authorization checks before exposing results. Relevance alone is not permission.
+      </div>`;
+  }
+
+  if (stage === 4) {
+    return `
+      <h2 class="section-title">Stage 5 — LLM generates an answer</h2>
+      <p class="muted">The prompt combines the user's question, retrieved passages, and instructions. The LLM uses them to compose a response.</p>
+      <label>User question</label>
+      <div class="output">${esc(question)}</div>
+      <label>Context passed to the LLM (${retrieved.length} chunks)</label>
+      <div class="output">${retrieved.length
+        ? retrieved.map(c => `[${c.id} | ${c.title}]\n${c.text}`).join("\n\n")
+        : "No chunks retrieved yet. Go back to Stage 4 and run retrieval."
+      }</div>
+      <label>Simulated LLM answer</label>
+      <div class="output">${esc(answerText || "Run retrieval first to prepare the context and generate an answer.")}</div>
+      <div style="margin-top:10px">
+        <b>Sources:</b> ${retrieved.length
+          ? retrieved.map(c => `<span class="citation">${esc(c.id)} — ${esc(c.title)}</span>`).join(" ")
+          : "No sources available."
+        }
+      </div>
+      <div class="notice">
+        <b>Grounding is not a guarantee.</b> An LLM can still misunderstand evidence or add unsupported claims. Citations help people verify the answer, but they must point to the evidence actually used.
+      </div>`;
+  }
+
+  return `
+    <h2 class="section-title">Stage 6 — Evaluate and maintain the system</h2>
+    <p class="muted">A RAG product needs monitoring beyond “the answer sounds good.” Review the example checks below.</p>
+    <div class="doc-list">
+      <div class="doc">
+        <h4>1. Retrieval quality</h4>
+        <p>Did the system retrieve the correct chunk? Measure whether relevant evidence appears in the top results.</p>
+        <div class="meta"><span class="pill blue">Recall@k · Precision@k</span></div>
+      </div>
+      <div class="doc">
+        <h4>2. Answer quality</h4>
+        <p>Is the response accurate, relevant, complete, and supported by the retrieved context?</p>
+        <div class="meta"><span class="pill blue">Faithfulness · Correctness</span></div>
+      </div>
+      <div class="doc">
+        <h4>3. Freshness and drift</h4>
+        <p>If the refund policy changes, update the source and ensure the indexing pipeline refreshes the affected chunks and embeddings.</p>
+        <div class="meta"><span class="pill">Freshness · Re-indexing</span></div>
+      </div>
+      <div class="doc">
+        <h4>4. Safety, permissions, and cost</h4>
+        <p>Check authorization, sensitive-data handling, retrieval latency, prompt/context token usage, and the cost of embeddings, search, reranking, and generation.</p>
+        <div class="meta"><span class="pill">Access control · Cost · Latency</span></div>
+      </div>
+    </div>
+    <div class="notice green">
+      <b>Product takeaway:</b> RAG quality depends on the whole pipeline: source data → chunking → indexing → retrieval → generation → evaluation and maintenance.
+    </div>
+    <button class="secondary" id="tryAgainBtn">Run the demo again</button>`;
+}
+
+function render() {
+  $("stageContent").innerHTML = stageHTML();
+
+  const steps = [...document.querySelectorAll(".step")];
+  steps.forEach((el, i) => {
+    el.className = "step" +
+      (i === stage ? " active" : i < stage ? " done" : "");
+  });
+
+  $("progressBar").style.width = ((stage + 1) / 6 * 100) + "%";
+  $("backBtn").disabled = stage === 0;
+  $("nextBtn").textContent =
+    stage === 5 ? "Finish ✓" : "Next stage →";
+
+  $("docMetric").textContent = docs.length;
+  $("chunkMetric").textContent = chunks.length;
+  $("retrievalMetric").textContent = stage < 3 ? "—" : retrieved.length;
+  $("tokenMetric").textContent = retrieved.length
+    ? retrieved.reduce((n, c) => n + c.text.split(/\s+/).length, 0)
+    : "—";
+
+  const notes = [
+    "Source documents are the knowledge base. They exist before the user query.",
+    "Chunking creates retrievable passages; chunk design affects relevance.",
+    "Embeddings make semantic comparison possible. These displayed vectors are illustrative.",
+    "The retriever selects passages likely to answer the question; permission checks must also apply.",
+    "The LLM receives the question plus retrieved context and generates the answer.",
+    "Evaluate retrieval and answer quality, access control, freshness, latency, and cost."
+  ];
+
+  $("snapshotNote").textContent = notes[stage];
+
+  if ($("retrieveBtn")) {
+    $("retrieveBtn").addEventListener("click", () => {
+      doRetrieve();
+      render();
+    });
+  }
+
+  if ($("tryAgainBtn")) {
+    $("tryAgainBtn").addEventListener("click", () => {
+      stage = 0;
+      retrieved = [];
+      answerText = "";
+      render();
+    });
+  }
+}
+
+$("nextBtn").addEventListener("click", () => {
+  if (stage === 2) {
+    const q = $("questionInput")?.value?.trim();
+    if (q) question = q;
+  }
+
+  if (stage === 3) {
+    doRetrieve();
+  }
+
+  if (stage < 5) {
+    stage++;
+    render();
+  }
+});
+
+$("backBtn").addEventListener("click", () => {
+  if (stage > 0) {
+    stage--;
+    render();
+  }
+});
+
+$("resetBtn").addEventListener("click", () => {
+  stage = 0;
+  question = defaultQuestion;
+  retrieved = [];
+  answerText = "";
+  permissionFilter = false;
+  render();
+});
+
+splitChunks();
+render();
+</script>
+</body>
+</html>
